@@ -1,14 +1,34 @@
 <?php
 
+$numbers = [
+    'zero' => 0,
+    'one' => 1,
+    'two' => 2,
+    'three' => 3,
+    'four' => 4,
+    'five' => 5,
+    'six' => 6,
+    'seven' => 7,
+    'eight' => 8,
+    'nine' => 9,
+];
+
 /**
- * @param string $line
  * @return integer
  */
 function getFirst(string $line): int
 {
-    foreach (str_split($line) as $char) {
-        if (is_numeric($char)) {
-            return (int) $char;
+    $lineLenth = strlen($line);
+
+    for ($i = 0; $i < $lineLenth; $i++) {
+        if (is_numeric($line[$i])) {
+            return (int) $line[$i];
+        }
+
+        foreach ($GLOBALS['numbers'] as $number => $value) {
+            if (numberIsPart($line, $i, $number)) {
+                return $value;
+            }
         }
     }
 
@@ -16,7 +36,6 @@ function getFirst(string $line): int
 }
 
 /**
- * @param string $line
  * @return integer
  */
 function getLast(string $line): int
@@ -25,18 +44,31 @@ function getLast(string $line): int
         if (is_numeric($line[$i])) {
             return (int) $line[$i];
         }
+
+        foreach ($GLOBALS['numbers'] as $number => $value) {
+            if (numberIsPart($line, $i - strlen($number), $number)) {
+                return $value;
+            }
+        }
     }
 
     throw new Exception('No number found');
 }
 
 /**
- * @param string $line
  * @return integer
  */
 function getLineValue(string $line): int
 {
     return (getFirst($line) * 10) + getLast($line);
+}
+
+/**
+ * @return boolean
+ */
+function numberIsPart(string $line, int $start, string $number): bool
+{
+    return substr($line, $start, strlen($number)) === $number;
 }
 
 $filename = $argv[1];
