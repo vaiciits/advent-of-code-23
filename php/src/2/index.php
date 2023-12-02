@@ -5,9 +5,18 @@ require_once __DIR__ . '\..\common\Puzzle.php';
 class Puzzle2 extends Puzzle
 {
     /**
+     * Sum of valid game ids.
+     *
      * @var integer
      */
     public int $answer = 0;
+
+    /**
+     * Sum of min set size multiplication.
+     *
+     * @var integer
+     */
+    public int $answer2 = 0;
 
     /**
      * @var <string, int>
@@ -32,6 +41,34 @@ class Puzzle2 extends Puzzle
         }
 
         return (int) explode(' ', $data[0])[1];
+    }
+
+    /**
+     * @return integer
+     */
+    public function getMinSetSize(string $line): int
+    {
+        $data = explode(':', $line);
+        $sets = explode(';', $data[1]);
+        $colors = [
+            'red' => 0,
+            'green' => 0,
+            'blue' => 0,
+        ];
+
+        foreach ($sets as $set) {
+            $cubes = explode(',', $set);
+
+            foreach ($cubes as $cube) {
+                $cubeData = explode(' ', trim($cube));
+
+                if ($colors[$cubeData[1]] < (int) $cubeData[0]) {
+                    $colors[$cubeData[1]] = (int) $cubeData[0];
+                }
+            }
+        }
+
+        return $colors['red'] * $colors['green'] * $colors['blue'];
     }
 
     /**
@@ -61,6 +98,7 @@ class Puzzle2 extends Puzzle
 
         foreach ($lines as $line) {
             $this->answer += $this->getLineValue($line);
+            $this->answer2 += $this->getMinSetSize($line);
         }
 
         return $this;
@@ -68,4 +106,6 @@ class Puzzle2 extends Puzzle
 }
 
 $puzzle = new Puzzle2($argv[1]);
-echo $puzzle->run()->answer . PHP_EOL;
+$puzzle->run();
+echo 'Part 1: ' . $puzzle->answer . PHP_EOL;
+echo 'Part 2: ' . $puzzle->answer2 . PHP_EOL;
