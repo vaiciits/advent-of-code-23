@@ -3,8 +3,103 @@ use std::fs;
 
 fn main() {
     let contents: String = load_input();
-    let sum: u32 = part_number_sum(&contents);
-    println!("Sum: {}", sum);
+    let part_number_sum: u32 = part_number_sum(&contents);
+    println!("Part number sum: {}", part_number_sum);
+    let gear_ratio_sum: u32 = gear_ratio_sum(&contents);
+    println!("Gear ratio sum: {}", gear_ratio_sum);
+}
+
+fn gear_ratio(lines: Vec<&str>, line_index: usize, char_index: usize) -> u32 {
+    let mut first_number: u32 = 0;
+    let mut second_number: u32 = 0;
+
+    let lines_lenght: usize = lines.len();
+    let mut current_line: usize = if line_index as i32 - 1 >= 0 {
+        line_index - 1
+    } else {
+        0
+    };
+    let last_line: usize = if line_index + 1 >= lines_lenght {
+        lines_lenght - 1
+    } else {
+        line_index + 1
+    };
+
+    'outer_loop: while current_line <= last_line {
+        let line = lines[current_line];
+        let line_length: usize = line.len();
+        let mut current_char_index: usize = if char_index as i32 - 1 >= 0 {
+            char_index - 1
+        } else {
+            0
+        };
+        let last_char_index: usize = if char_index + 1 >= line_length {
+            line_length - 1
+        } else {
+            char_index + 1
+        };
+        // To not add the same char twice to number.
+        let mut is_number: bool = false;
+
+        while current_char_index <= last_char_index {
+            let c: char = line.chars().nth(current_char_index).unwrap();
+
+            if c.is_digit(10) {
+                if !is_number {
+                    let number = number_from_line(line, current_char_index);
+
+                    if first_number == 0 {
+                        first_number = number;
+                    } else {
+                        second_number = number;
+                        break 'outer_loop;
+                    }
+                }
+                is_number = true;
+            } else {
+                is_number = false;
+            }
+
+            // print!("{}", c);
+            current_char_index += 1;
+        }
+
+        // println!();
+        current_line += 1;
+    }
+
+    first_number * second_number
+}
+
+fn gear_ratio_sum(contents: &str) -> u32 {
+    let mut sum: u32 = 0;
+    let lines: Vec<&str> = contents.lines().collect();
+    let mut line_index: usize = 0;
+    let lines_length: usize = lines.len();
+
+    while line_index < lines_length {
+        let line: &str = lines[line_index];
+        // println!("{}: {}", line_index, line);
+        let line_length: usize = line.len();
+        let mut char_index: usize = 0;
+
+        while char_index < line_length {
+            let c = line.chars().nth(char_index).unwrap();
+
+            if c == '*' {
+                // println!("*");
+                let gear_ratio = gear_ratio(lines.clone(), line_index, char_index);
+                // println!("gear_ratio: {}", gear_ratio);
+                sum += gear_ratio;
+            }
+
+            char_index += 1;
+        }
+
+        line_index += 1;
+    }
+
+    sum
 }
 
 fn load_input() -> String {
@@ -27,6 +122,36 @@ fn last_digit_index(line: &str, start: usize) -> usize {
     }
 
     last_digit_index
+}
+
+fn number_from_line(line: &str, start: usize) -> u32 {
+    let mut number: String = line.chars().nth(start).unwrap().to_string();
+    let line_length: usize = line.len();
+    let mut first_char_index: usize = start;
+    let mut last_char_index: usize = start;
+
+    while first_char_index > 0 {
+        first_char_index -= 1;
+        let c = line.chars().nth(first_char_index).unwrap();
+        if c.is_digit(10) {
+            number.insert(0, c);
+        } else {
+            break;
+        }
+    }
+
+    while last_char_index < line_length - 1 {
+        last_char_index += 1;
+        let c = line.chars().nth(last_char_index).unwrap();
+        if c.is_digit(10) {
+            number.push(c);
+        } else {
+            break;
+        }
+    }
+
+    // println!("number: {}", number);
+    number.parse::<u32>().unwrap()
 }
 
 fn number_is_part_number(
@@ -88,7 +213,6 @@ fn part_number_sum(contents: &str) -> u32 {
     let mut sum: u32 = 0;
     let lines: Vec<&str> = contents.lines().collect();
     let mut line_index: usize = 0;
-
     let lines_length: usize = lines.len();
 
     while line_index < lines_length {
