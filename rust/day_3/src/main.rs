@@ -15,16 +15,15 @@ fn load_input() -> String {
 
 fn last_digit_index(line: &str, start: usize) -> usize {
     let mut last_digit_index: usize = start;
-    let mut char_index: usize = start;
+    let mut char_index: usize = start + 1;
 
     while char_index < line.len() {
-        char_index += 1;
-
         if !line.chars().nth(char_index).unwrap().is_digit(10) {
             break;
         }
 
         last_digit_index = char_index;
+        char_index += 1;
     }
 
     last_digit_index
