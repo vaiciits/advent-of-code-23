@@ -70,7 +70,6 @@ fn sum_of_cards(contents: &str) -> u32 {
     while line_index < lines_length {
         let line: &str = lines[line_index];
         // println!("{}: {}", line_index, line);
-        // let card_count: u32 = card_count(line);
         let winning_numbers: Vec<u32> = winning_numbers(line);
         // println!("winning_numbers: {:?}", winning_numbers);
         let card_numbers: Vec<u32> = card_numbers(line);
