@@ -52,7 +52,9 @@ fn find_destination(connections: &Vec<Connection>, source: u32) -> u32 {
             continue;
         }
 
-        if connection.source <= source && connection.source + connection.range - 1 >= source {
+        if connection.source <= source
+            && (connection.source as u64 + connection.range as u64 - 1) >= source as u64
+        {
             return source - connection.source + connection.destination;
         }
     }
