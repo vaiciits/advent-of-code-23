@@ -105,9 +105,13 @@ fn load_seeds(lines: Vec<&str>) -> Vec<Seed> {
     let value_part: Vec<&str> = line.split(":").collect();
     let values: Vec<&str> = value_part[1].trim().split(" ").collect();
 
-    for value in values {
-        // println!("value: {}", value);
-        seeds.push(build_seed(value.parse::<u32>().unwrap()));
+    for pair in values.chunks(2) {
+        let min: u32 = pair[0].parse::<u32>().unwrap();
+        let limit: u32 = pair[1].parse::<u32>().unwrap();
+
+        for value in min..=min + limit - 1 {
+            seeds.push(build_seed(value));
+        }
     }
 
     seeds
