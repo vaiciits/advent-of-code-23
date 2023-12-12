@@ -1,30 +1,9 @@
-use std::{env, fs};
+use std::{env, fs, os::windows::process};
 
 struct Connection {
     destination: u32,
     source: u32,
     range: u32,
-}
-
-impl Clone for Connection {
-    fn clone(&self) -> Connection {
-        Connection {
-            destination: self.destination.clone(),
-            source: self.source.clone(),
-            range: self.range.clone(),
-        }
-    }
-}
-
-struct Seed {
-    seed: u32,
-    soil: u32,
-    fertilizer: u32,
-    water: u32,
-    light: u32,
-    temperature: u32,
-    humidity: u32,
-    location: u32,
 }
 
 fn main() {
@@ -33,20 +12,9 @@ fn main() {
     println!("Lowest location number: {}", lowest_location_number);
 }
 
-fn build_seed(value: u32) -> Seed {
-    Seed {
-        seed: value,
-        soil: 0,
-        fertilizer: 0,
-        water: 0,
-        light: 0,
-        temperature: 0,
-        humidity: 0,
-        location: 0,
-    }
-}
+fn find_destination(lines: &Vec<&str>, key: &str, source: u32) -> u32 {
+    let connections = load_connections(&lines, key);
 
-fn find_destination(connections: &Vec<Connection>, source: u32) -> u32 {
     for connection in connections {
         if connection.source > source {
             continue;
@@ -99,107 +67,48 @@ fn load_input() -> String {
     fs::read_to_string(file_name).expect("Something went wrong reading the file")
 }
 
-fn load_seeds(lines: Vec<&str>) -> Vec<Seed> {
-    let mut seeds: Vec<Seed> = Vec::new();
+fn location_from_seed(seed: u32, lines: &Vec<&str>) -> u32 {
+    let mut value: u32 = seed;
+    // println!("Seed: {}", value);
+    value = find_destination(&lines, "seed-to-soil", value);
+    // println!("Soil: {}", value);
+    value = find_destination(&lines, "soil-to-fertilizer", value);
+    // println!("Fertilizer: {}", value);
+    value = find_destination(&lines, "fertilizer-to-water", value);
+    // println!("Water: {}", value);
+    value = find_destination(&lines, "water-to-light", value);
+    // println!("Light: {}", value);
+    value = find_destination(&lines, "light-to-temperature", value);
+    // println!("Temperature: {}", value);
+    value = find_destination(&lines, "temperature-to-humidity", value);
+    // println!("Humidity: {}", value);
+    value = find_destination(&lines, "humidity-to-location", value);
+    // println!("Location: {}", value);
+    // println!();
+
+    value
+}
+
+fn lowest_location_number(contents: &str) -> u32 {
+    let lines: Vec<&str> = contents.lines().collect();
+    let mut lowest_location: u32 = std::u32::MAX;
+
     let line: &str = lines[0];
-    let value_part: Vec<&str> = line.split(":").collect();
-    let values: Vec<&str> = value_part[1].trim().split(" ").collect();
+    let parts: Vec<&str> = line.split(":").collect();
+    let values: Vec<&str> = parts[1].trim().split(" ").collect();
 
     for pair in values.chunks(2) {
         let min: u32 = pair[0].parse::<u32>().unwrap();
         let limit: u32 = pair[1].parse::<u32>().unwrap();
 
         for value in min..=min + limit - 1 {
-            seeds.push(build_seed(value));
+            let location = location_from_seed(value, &lines);
+
+            if location < lowest_location {
+                lowest_location = location;
+            }
         }
     }
 
-    seeds
-}
-
-fn lowest_location_number(contents: &str) -> u32 {
-    let seeds: Vec<Seed> = process_seeds(contents);
-
-    // for seed in seeds {
-    //     println!();
-    //     println!("Seed {}", seed.seed);
-    //     println!("Soil {}", seed.soil);
-    //     println!("Fertilizer {}", seed.fertilizer);
-    //     println!("Water {}", seed.water);
-    //     println!("Light {}", seed.light);
-    //     println!("Temperature {}", seed.temperature);
-    //     println!("Humidity {}", seed.humidity);
-    //     println!("Location {}", seed.location);
-    // }
-
-    seeds.iter().min_by_key(|&s| s.location).unwrap().location
-}
-
-fn process_fertilizer(seeds: &mut Vec<Seed>, lines: &Vec<&str>) {
-    let connections: Vec<Connection> = load_connections(lines, "soil-to-fertilizer");
-
-    for seed in seeds {
-        seed.fertilizer = find_destination(&connections, seed.soil);
-    }
-}
-
-fn process_humidity(seeds: &mut Vec<Seed>, lines: &Vec<&str>) {
-    let connections: Vec<Connection> = load_connections(lines, "temperature-to-humidity");
-
-    for seed in seeds {
-        seed.humidity = find_destination(&connections, seed.temperature);
-    }
-}
-
-fn process_light(seeds: &mut Vec<Seed>, lines: &Vec<&str>) {
-    let connections: Vec<Connection> = load_connections(lines, "water-to-light");
-
-    for seed in seeds {
-        seed.light = find_destination(&connections, seed.water);
-    }
-}
-
-fn process_location(seeds: &mut Vec<Seed>, lines: &Vec<&str>) {
-    let connections: Vec<Connection> = load_connections(lines, "humidity-to-location");
-
-    for seed in seeds {
-        seed.location = find_destination(&connections, seed.humidity);
-    }
-}
-
-fn process_seeds(contents: &str) -> Vec<Seed> {
-    let lines: Vec<&str> = contents.lines().collect();
-    let mut seeds: Vec<Seed> = load_seeds(lines.clone());
-    process_soil(&mut seeds, &lines);
-    process_fertilizer(&mut seeds, &lines);
-    process_water(&mut seeds, &lines);
-    process_light(&mut seeds, &lines);
-    process_temperature(&mut seeds, &lines);
-    process_humidity(&mut seeds, &lines);
-    process_location(&mut seeds, &lines);
-    seeds
-}
-
-fn process_soil(seeds: &mut Vec<Seed>, lines: &Vec<&str>) {
-    let connections: Vec<Connection> = load_connections(lines, "seed-to-soil");
-
-    for seed in seeds {
-        seed.soil = find_destination(&connections, seed.seed);
-    }
-}
-
-fn process_temperature(seeds: &mut Vec<Seed>, lines: &Vec<&str>) {
-    let connections: Vec<Connection> = load_connections(lines, "light-to-temperature");
-
-    for seed in seeds {
-        seed.temperature = find_destination(&connections, seed.light);
-    }
-}
-
-fn process_water(seeds: &mut Vec<Seed>, lines: &Vec<&str>) {
-    let connections: Vec<Connection> = load_connections(lines, "fertilizer-to-water");
-
-    for seed in seeds {
-        seed.water = find_destination(&connections, seed.fertilizer);
-    }
+    lowest_location
 }
