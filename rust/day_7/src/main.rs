@@ -49,6 +49,7 @@ fn main() {
 
 fn card_value(ch: char) -> u8 {
     match ch {
+        'J' => 1, // Acts as a joker - is the weakest card
         '2' => 2,
         '3' => 3,
         '4' => 4,
@@ -58,7 +59,6 @@ fn card_value(ch: char) -> u8 {
         '8' => 8,
         '9' => 9,
         'T' => 10,
-        'J' => 11,
         'Q' => 12,
         'K' => 13,
         'A' => 14,
@@ -89,10 +89,21 @@ fn hand_type(value: &str) -> HandType {
     let mut max_value: u8 = 0;
 
     for (&key, &value) in char_count.iter() {
-        if value > max_value {
+        if key == 'J' {
+            continue;
+        }
+
+        if value > max_value
+            || (value == max_value && card_value(key) > card_value(max_key.unwrap()))
+        {
             max_key = Some(key);
             max_value = value;
         }
+    }
+
+    if char_count.contains_key(&'J') {
+        max_value += char_count.get(&'J').unwrap();
+        char_count.remove(&'J');
     }
 
     // dbg!(&char_count);
@@ -105,8 +116,6 @@ fn hand_type(value: &str) -> HandType {
         5 => HandType::FiveOfAKind,
         _ => HandType::HighCard,
     };
-
-    // let mut char_count_clone: HashMap<char, u8> = char_count.clone();
 
     match hand_type {
         HandType::OnePair | HandType::ThreeOfAKind => {
@@ -164,7 +173,7 @@ fn total_winnings(contents: &str) -> u32 {
     let lines: Vec<&str> = contents.lines().collect();
     let mut hands: Vec<Hand> = load_hands(&lines);
 
-    hands.sort_by(|a, b| {
+    hands.sort_by(|a: &Hand, b: &Hand| {
         let a_value: u8 = a.hand_type.value();
         let b_value: u8 = b.hand_type.value();
         if a_value < b_value {
