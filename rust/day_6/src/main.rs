@@ -6,14 +6,12 @@ fn main() {
     println!("Margin of error: {}", margin_of_errror);
 }
 
-fn extract_values(line: &str) -> Vec<u32> {
+fn extract_value(line: &str) -> u64 {
     let parts: Vec<&str> = line.split(":").collect();
     let mut values: Vec<&str> = parts[1].trim().split(" ").collect();
     values.retain(|&v| !v.is_empty());
-    values
-        .iter()
-        .map(|v: &&str| v.parse::<u32>().unwrap())
-        .collect()
+    let value: String = values.join("");
+    value.parse::<u64>().unwrap()
 }
 
 fn load_input() -> String {
@@ -23,36 +21,17 @@ fn load_input() -> String {
 }
 
 fn margin_of_error(contents: &str) -> u32 {
-    // println!("{}", contents);
     let lines: Vec<&str> = contents.lines().collect();
-    let times: Vec<u32> = extract_values(lines[0]);
-    let distances: Vec<u32> = extract_values(lines[1]);
+    let time: u64 = extract_value(lines[0]);
+    let distance: u64 = extract_value(lines[1]);
     // println!("{:?}", times);
     // println!("{:?}", distances);
-
-    let mut margin_of_error: u32 = 1;
-    let race_count: usize = times.len();
-    let mut count: usize = 0;
-
-    while count < race_count {
-        let total_time: u32 = times[count];
-        let total_distance: u32 = distances[count];
-        // println!("{} {}", total_time, total_distance);
-        let number_of_ways: u32 = number_of_ways(total_time, total_distance);
-
-        if number_of_ways > 0 {
-            margin_of_error *= number_of_ways;
-        }
-
-        count += 1;
-    }
-
-    margin_of_error
+    number_of_ways(time, distance)
 }
 
-fn number_of_ways(total_time: u32, total_distance: u32) -> u32 {
+fn number_of_ways(total_time: u64, total_distance: u64) -> u32 {
     let mut number_of_ways: u32 = 0;
-    let mut speed: u32 = 1;
+    let mut speed: u64 = 1;
 
     while speed <= total_time {
         if speed * (total_time - speed) > total_distance {
