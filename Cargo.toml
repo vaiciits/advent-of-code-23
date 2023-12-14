@@ -8,4 +8,5 @@ members = [
     "rust/day_6",
     "rust/day_7",
     "rust/day_8",
+    "rust/day_9",
 ]
