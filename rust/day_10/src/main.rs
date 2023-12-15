@@ -1,4 +1,4 @@
-use std::{env, fs, thread, time::Duration};
+use std::{env, fs};
 
 #[derive(Debug, Copy, Clone)]
 struct Coord {
@@ -180,7 +180,6 @@ fn walk_grid(grid: &Vec<Vec<char>>, start: Coord, direction: Direction) -> Vec<C
             next_dir.opposite(),
         );
         // println!("Next direction: {:?}", next_dir);
-        thread::sleep(Duration::from_secs(2));
     }
 
     // println!("{:?}", steps);
