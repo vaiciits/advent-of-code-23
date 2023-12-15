@@ -22,17 +22,19 @@ fn find_next(values: &Vec<i32>) -> i32 {
     }
 
     let mut next_sequence: Vec<i32> = Vec::new();
-    let mut previous: i32 = values[0];
     let length: usize = values.len();
-    let mut index: usize = 1;
+    let mut previous: i32 = values[length - 1];
+    let mut index: usize = length - 1;
 
-    while index < length {
-        next_sequence.push(values[index] - previous);
+    while index > 0 {
+        index -= 1;
+        // next_sequence.push(previous - values[index]);
+        next_sequence.insert(0, previous - values[index]);
         previous = values[index];
-        index += 1;
     }
 
-    let next: i32 = previous + find_next(&next_sequence);
+    // println!("{:?}", next_sequence);
+    let next: i32 = previous - find_next(&next_sequence);
     // println!("Next: {}", next);
     next
 }
