@@ -1,4 +1,8 @@
-use std::{char, collections::HashMap, env, fs};
+use std::{
+    char,
+    collections::{HashMap, HashSet},
+    env, fs,
+};
 
 struct Node {
     left: String,
@@ -21,30 +25,38 @@ impl Turn {
 
 fn main() {
     let contents: String = load_input();
-    let step_count: u64 = step_count(&contents);
+    let step_count: u128 = step_count(&contents);
     println!("Step count: {}", step_count);
 }
 
-fn all_end_keys(current_keys: &Vec<&str>) -> bool {
-    for key in current_keys {
-        if !key.ends_with("Z") {
-            return false;
-        }
+fn gcd(a: u128, b: u128) -> u128 {
+    if b == 0 {
+        return a;
     }
 
-    true
+    gcd(b, a % b)
 }
 
-fn initial_nodes<'a>(nodes: &'a HashMap<&'a str, Node>) -> Vec<&str> {
-    let mut initial_nodes: Vec<&str> = Vec::new();
+fn initial_keys<'a>(nodes: &'a HashMap<&'a str, Node>) -> HashSet<&'a str> {
+    let mut initial_keys: HashSet<&str> = HashSet::new();
 
     for key in nodes.keys() {
         if key.ends_with("A") {
-            initial_nodes.push(key);
+            initial_keys.insert(key);
         }
     }
 
-    initial_nodes
+    initial_keys
+}
+
+fn least_common_multiple(values: &Vec<u32>) -> u128 {
+    let mut lcm: u128 = 1;
+
+    for value in values {
+        lcm = lcm * (*value as u128) / gcd(lcm, *value as u128);
+    }
+
+    lcm
 }
 
 fn load_input() -> String {
@@ -102,24 +114,38 @@ fn load_turns(line: &str) -> Vec<Turn> {
     turns
 }
 
-fn step_count(contents: &String) -> u64 {
+fn step_count(contents: &String) -> u128 {
     let lines: Vec<&str> = contents.lines().collect();
     let turns: Vec<Turn> = load_turns(&lines[0]);
     let nodes: HashMap<&str, Node> = load_nodes(&lines);
-    let steps: u64 = step_counter(&turns, &nodes);
+    let steps: u128 = step_counter(&turns, &nodes);
     steps
 }
 
-fn step_counter(turns: &Vec<Turn>, nodes: &HashMap<&str, Node>) -> u64 {
-    let mut steps: u64 = 0;
+fn step_counter(turns: &Vec<Turn>, nodes: &HashMap<&str, Node>) -> u128 {
+    let mut step: u32 = 0;
     let mut index: usize = 0;
-    let mut current_keys: Vec<&str> = initial_nodes(&nodes);
+    let mut current_keys: HashSet<&str> = initial_keys(&nodes);
+    // println!("{:?}", current_keys);
+    let mut steps: Vec<u32> = Vec::new();
 
     loop {
-        turn_nodes(&mut current_keys, &nodes, &turns[index]);
-        steps += 1;
+        current_keys = turn_nodes(&current_keys, &nodes, &turns[index]);
+        step += 1;
 
-        if all_end_keys(&current_keys) {
+        // println!("{:?}", current_keys);
+        let mut new_keys: HashSet<&str> = HashSet::new();
+
+        for key in &current_keys {
+            if key.ends_with("Z") {
+                steps.push(step);
+            } else {
+                new_keys.insert(key);
+            }
+        }
+
+        current_keys = new_keys;
+        if current_keys.len() == 0 {
             break;
         }
 
@@ -127,14 +153,24 @@ fn step_counter(turns: &Vec<Turn>, nodes: &HashMap<&str, Node>) -> u64 {
         index = (index + 1) % turns.len();
     }
 
-    steps
+    // println!("{:?}", steps);
+    let step_count: u128 = least_common_multiple(&steps);
+    step_count
 }
 
-fn turn_nodes<'a>(current_keys: &mut Vec<&'a str>, nodes: &'a HashMap<&str, Node>, turn: &Turn) {
-    for node in current_keys.iter_mut() {
-        *node = match turn {
+fn turn_nodes<'a>(
+    current_keys: &HashSet<&'a str>,
+    nodes: &'a HashMap<&str, Node>,
+    turn: &Turn,
+) -> HashSet<&'a str> {
+    let mut next_keys: HashSet<&str> = HashSet::new();
+
+    for node in current_keys.iter() {
+        next_keys.insert(match turn {
             Turn::Left => &nodes[node].left,
             Turn::Right => &nodes[node].right,
-        };
+        });
     }
+
+    next_keys
 }
