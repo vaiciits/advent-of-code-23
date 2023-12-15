@@ -21,8 +21,30 @@ impl Turn {
 
 fn main() {
     let contents: String = load_input();
-    let step_count: u32 = step_count(&contents);
+    let step_count: u64 = step_count(&contents);
     println!("Step count: {}", step_count);
+}
+
+fn all_end_keys(current_keys: &Vec<&str>) -> bool {
+    for key in current_keys {
+        if !key.ends_with("Z") {
+            return false;
+        }
+    }
+
+    true
+}
+
+fn initial_nodes<'a>(nodes: &'a HashMap<&'a str, Node>) -> Vec<&str> {
+    let mut initial_nodes: Vec<&str> = Vec::new();
+
+    for key in nodes.keys() {
+        if key.ends_with("A") {
+            initial_nodes.push(key);
+        }
+    }
+
+    initial_nodes
 }
 
 fn load_input() -> String {
@@ -80,32 +102,24 @@ fn load_turns(line: &str) -> Vec<Turn> {
     turns
 }
 
-fn step_count(contents: &String) -> u32 {
+fn step_count(contents: &String) -> u64 {
     let lines: Vec<&str> = contents.lines().collect();
     let turns: Vec<Turn> = load_turns(&lines[0]);
-
     let nodes: HashMap<&str, Node> = load_nodes(&lines);
-    let steps: u32 = step_counter(&turns, &nodes);
+    let steps: u64 = step_counter(&turns, &nodes);
     steps
 }
 
-fn step_counter(turns: &Vec<Turn>, nodes: &HashMap<&str, Node>) -> u32 {
-    let mut steps: u32 = 0;
+fn step_counter(turns: &Vec<Turn>, nodes: &HashMap<&str, Node>) -> u64 {
+    let mut steps: u64 = 0;
     let mut index: usize = 0;
-    let mut current_node: &str = "AAA";
-    // println!("Begin: {}", current_node);
+    let mut current_keys: Vec<&str> = initial_nodes(&nodes);
 
     loop {
-        let turn: &Turn = &turns[index];
-
-        current_node = match turn {
-            Turn::Left => &nodes[current_node].left,
-            Turn::Right => &nodes[current_node].right,
-        };
+        turn_nodes(&mut current_keys, &nodes, &turns[index]);
         steps += 1;
-        // println!("{}: {}", turn.to_string(), current_node);
 
-        if current_node == "ZZZ" {
+        if all_end_keys(&current_keys) {
             break;
         }
 
@@ -113,6 +127,14 @@ fn step_counter(turns: &Vec<Turn>, nodes: &HashMap<&str, Node>) -> u32 {
         index = (index + 1) % turns.len();
     }
 
-    // println!("count {}", steps);
     steps
+}
+
+fn turn_nodes<'a>(current_keys: &mut Vec<&'a str>, nodes: &'a HashMap<&str, Node>, turn: &Turn) {
+    for node in current_keys.iter_mut() {
+        *node = match turn {
+            Turn::Left => &nodes[node].left,
+            Turn::Right => &nodes[node].right,
+        };
+    }
 }
